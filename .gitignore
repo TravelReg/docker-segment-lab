@@ -1,0 +1,30 @@
+# Local environment configuration
+.env
+
+# Database secrets
+secrets/*
+!secrets/.gitkeep
+
+# Python-generated files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Test output
+coverage/
+htmlcov/
+*.pcap
+*.log
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Local temporary files
+tmp/
+*.tmp
