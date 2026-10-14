@@ -1,6 +1,59 @@
 services:
+  api:
+    build:
+      context: ./api
+      args:
+        APP_UID: ${APP_UID:-1000}
+
+    restart: unless-stopped
+
+    environment:
+      DB_HOST: database
+      DB_PORT: "5432"
+      DB_NAME: segmentdb
+      DB_USER: segmentuser
+      DB_PASSWORD_FILE: /run/secrets/db_password
+
+    secrets:
+      - db_password
+
+    depends_on:
+      database:
+        condition: service_healthy
+
+    networks:
+      app_net:
+        ipv4_address: 172.28.20.20
+      data_net:
+        ipv4_address: 172.28.30.20
+
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+    read_only: true
+
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+
+    mem_limit: 256m
+
   database:
     image: postgres:18-alpine
+
     restart: unless-stopped
 
     environment:
@@ -42,6 +95,13 @@ volumes:
     name: segment_database_data
 
 networks:
+  app_net:
+    name: segment_app
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.28.20.0/24
+
   data_net:
     name: segment_data
     internal: true
