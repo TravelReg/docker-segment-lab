@@ -24,3 +24,13 @@ Only the gateway is published to the Docker host. The API and PostgreSQL databas
 ## Project status
 
 Work in progress.
+
+## Quick start
+
+Create the local files:
+
+```bash
+cp .env.example .env
+mkdir -p secrets
+openssl rand -base64 32 > secrets/db_password.txt
+chmod 600 secrets/db_password.txt

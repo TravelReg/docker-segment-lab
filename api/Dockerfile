@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-ARG APP_UID=0
+ARG APP_UID=10001
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -18,9 +18,11 @@ RUN groupadd \
         --shell /usr/sbin/nologin \
         appuser
 
-COPY requirements.txt /app/requirements.txt
+COPY requirements.txt requirements.lock /app/
 
-RUN pip install --no-cache-dir --requirement /app/requirements.txt
+RUN pip install \
+        --no-cache-dir \
+        --requirement /app/requirements.lock
 
 COPY --chown=appuser:appgroup app/ /app/
 
