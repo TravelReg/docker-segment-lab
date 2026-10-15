@@ -429,4 +429,3 @@ if (( FAIL_COUNT > 0 )); then
     exit 1
 fi
 
-:%s#docker compose port api 8000 2>/dev/null || true#docker inspect --format '{{range .NetworkSettings.Ports}}{{if .}}published{{end}}{{end}}' "$(docker compose ps -q api)"#:%s#docker compose port database 5432 2>/dev/null || true#docker inspect --format '{{range .NetworkSettings.Ports}}{{if .}}published{{end}}{{end}}' "$(docker compose ps -q database)"#printf '\nAll required network checks passed.\n'
