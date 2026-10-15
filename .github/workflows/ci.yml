@@ -1,0 +1,84 @@
+name: Docker network verification
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: network-verification-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Build and verify network policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Display Docker versions
+        run: |
+          docker version
+          docker compose version
+
+      - name: Create ephemeral runtime configuration
+        shell: bash
+        run: |
+          {
+            echo "COMPOSE_PROJECT_NAME=segmented-network-ci"
+            echo "APP_UID=$(id -u)"
+          } > .env
+
+          mkdir -p secrets
+
+          (
+            umask 077
+            openssl rand -base64 32 > secrets/db_password.txt
+          )
+
+          stat \
+            --format='permissions=%a uid=%u file=%n' \
+            secrets/db_password.txt
+
+      - name: Validate source files
+        shell: bash
+        run: |
+          docker compose config --quiet
+          bash -n tests/test-network.sh
+          git diff --check
+
+      - name: Build container images
+        run: docker compose build --pull
+
+      - name: Run network verification
+        shell: bash
+        run: bash tests/test-network.sh
+
+      - name: Show diagnostics after failure
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs --tail=200
+
+          docker network inspect segment_edge || true
+          docker network inspect segment_app || true
+          docker network inspect segment_data || true
+
+      - name: Remove test environment
+        if: always()
+        run: |
+          docker compose down \
+            --volumes \
+            --remove-orphans
