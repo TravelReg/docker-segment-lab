@@ -428,4 +428,3 @@ if (( FAIL_COUNT > 0 )); then
     printf '\nNetwork verification failed.\n'
     exit 1
 fi
-
